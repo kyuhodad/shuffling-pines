@@ -1,16 +1,20 @@
 <!DOCTYPE html>
-<html ng-app="shuffling">
+<html ng-app="ShufflingPinesApp">
 
   <head>
     <meta charset="utf-8" />
     <title>Shuffling Pines</title>
-    <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css" /> -->
 
-    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="lib.js"></script>
+    <script src="app.js"></script>
+
+    <!-- <script src="../bower_components/jquery/dist/jquery.min.js"></script>
     <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../bower_components/angular/angular.min.js"></script>
 
-    <script src="../src/app.js"></script>
+    <script src="../src/app.js"></script> -->
   </head>
 
   <body>
@@ -26,54 +30,59 @@
         <!-- Tab panes -->
         <div class="tab-content">
           <!-- Tab pane 1 -->
-          <div role="tabpanel" class="tab-pane active" id="form">
+          <div ng-controller="FormController as formCtrl" role="tabpanel" class="tab-pane active" id="form">
             <div>
 
               <form class="col-md-6 well">
                 <div class="form-group">
                   <label for="guest-name">Guest Name</label>
-                  <input type="text" class="form-control" id="guest-name" placeholder="">
+                  <input ng-model="formCtrl.data.guestName" type="text" class="form-control" id="guest-name" placeholder="">
                 </div>
                 <div class="form-group">
                   <label for="transition-date">Transition Date</label>
-                  <input type="date" class="form-control" id="transition-date" placeholder="">
+                  <input ng-model="formCtrl.data.transitionDate" type="date" class="form-control" id="transition-date" placeholder="">
                 </div>
                 <div class="radio">
                   <label>
-                    <input type="radio" name="pickup-dropoff" id="pickup" value="pickup" checked>
+                    <input ng-model="formCtrl.data.status" type="radio" name="pickup-dropoff" id="pickup" value="pickup" checked >
                     Pick-up
                   </label>
                 </div>
                 <div class="radio">
                   <label>
-                    <input type="radio" name="pickup-dropoff" id="dropoff" value="dropoff">
+                    <input ng-model="formCtrl.data.status" type="radio" name="pickup-dropoff" id="dropoff" value="dropoff">
                     Drop-off
                   </label>
                 </div>
                 <div class="form-group">
                   <label for="location">Location</label>
-                  <textarea class="form-control" id="location"></textarea>
+                  <textarea ng-model="formCtrl.data.location" class="form-control" id="location"></textarea>
                 </div>
-                <button type="submit" class="btn">Submit</button>
+                <button ng-click="formCtrl.addGuest()" type="submit" class="btn">Submit</button>
               </form>
 
               <!-- bound display -->
-              <div ng-show="false" class="col-md-6 well">
-                <div ng-show="false" class="form-group">
+              <div ng-show="{{formCtrl.debugON}}" class="col-md-6 well">
+                <div ng-show="{{formCtrl.debugON}}" class="form-group">
+                  <label>JSON: </label>
+                  {{formCtrl.data | json}}<br/>
+                  {{formCtrl.jsonString}}
+                </div>
+                <div ng-show="{{formCtrl.debugON}}" class="form-group">
                   <label>Name: </label>
-                  John Harvard
+                  {{formCtrl.data.guestName}}
                 </div>
-                <div ng-show="false" class="form-group">
+                <div ng-show="{{formCtrl.debugON}}" class="form-group">
                   <label>Transition Date: </label>
-                  today!
+                  {{formCtrl.data.transitionDate}}
                 </div>
-                <div ng-show="false" class="form-group">
+                <div ng-show="{{formCtrl.debugON}}" class="form-group">
                   <label>Status: </label>
-                  drop-off
+                  {{formCtrl.data.status}}
                 </div>
-                <div ng-show="false" class="form-group">
+                <div ng-show="{{formCtrl.debugON}}" class="form-group">
                   <label>Location: </label>
-                  right here
+                  {{formCtrl.data.location}}
                 </div>
               </div>
 

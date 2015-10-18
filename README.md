@@ -1,2 +1,2 @@
+`npm install`
 `bower install`
-`open src/index.html`
