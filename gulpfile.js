@@ -27,7 +27,7 @@ gulp.task('buildApp', function() {
 gulp.task("buildLib", function() {
   return gulp.src([
     libRoot + "/jquery/dist/jquery.min.js",
-    libRoot + "/angular/angular.js",
+    libRoot + "/angular/angular.min.js",
     libRoot + "/bootstarp/dist/js/*.min.js"])
     .pipe(concat("lib.js"))
     .pipe(uglify())
