@@ -41,13 +41,11 @@ app.controller('TabController', ['$scope', 'guestManager',  function($scope, gue
 
   vm.setTab = function (idx) {
     vm.activeTab = idx;
-    console.log("Active tab is" + vm.activeTab );
   };
 
   // Event handlers
   $scope.$on('ADD_GUEST', function (evt) {
     vm.activeTab = 1;
-    console.log("Active tab is" + vm.activeTab );
   });
 }]);
 
@@ -64,8 +62,7 @@ app.controller('FormController', ['$scope', 'guestManager',  function($scope, gu
   vm.submitForm = function () {
     if (vm.input.name) {
       guestManager.addGuest(new GuestData(vm.input));
-
-      vm.input = {actionOption: 'pickup', transitionDate: new Date()};
+      initFormInput();
     }
   };
 
@@ -96,11 +93,15 @@ app.controller('GuestsController', ['$scope', 'guestManager',  function($scope, 
   vm.addGuest = function (guestData) {
     vm.guests.push(guestData);
     vm.updateGuestList ();
+    console.log('Guest List:');
+    console.log(angular.toJson(vm.guests, true));
   };
 
   vm.removeGuest = function (index) {
-    vm.guests.splice(index, 1);
-    vm.updateGuestList ();
+    if (window.confirm('Are you sure to delete a guest data?')) {
+      vm.guests.splice(index, 1);
+      vm.updateGuestList ();
+    }
   };
 
   vm.removeAllGuests = function () {
