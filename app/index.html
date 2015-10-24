@@ -1,106 +1,110 @@
 <!DOCTYPE html>
 <html ng-app="ShufflingPinesApp">
 
-  <head>
-    <meta charset="utf-8" />
-    <title>Shuffling Pines</title>
-    <link rel="stylesheet" href="styles.css" />
-    <!-- <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css" /> -->
+<head>
+  <meta charset="utf-8" />
+  <title>Shuffling Pines</title>
 
-    <script src="lib.js"></script>
-    <script src="app.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="lib.js"></script>
+  <script src="app.js"></script>
 
-    <!-- <script src="../bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="../bower_components/angular/angular.min.js"></script>
+  <!-- <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.min.css" />
 
-    <script src="../src/app.js"></script> -->
-  </head>
+  <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="../bower_components/angular/angular.min.js"></script>
+  <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
-  <body>
-    <h1>Shuffling Pines</h1>
-    <div class="row">
-      <div class="col-md-12">
-        <!-- Nav tabs -->
-        <ul class="nav nav-tabs" role="tablist">
-          <li role="presentation" class="active"><a href="#form" aria-controls="form" role="tab" data-toggle="tab">Form</a></li>
-          <li role="presentation"><a href="#guests" aria-controls="guests" role="tab" data-toggle="tab">Guests</a></li>
-        </ul>
+  <script src="js/app.js"></script> -->
+</head>
 
-        <!-- Tab panes -->
-        <div class="tab-content">
-          <!-- Tab pane 1 -->
-          <div ng-controller="FormController as formCtrl" role="tabpanel" class="tab-pane active" id="form">
-            <div>
+<body>
+  <h1>Shuffling Pines</h1>
+  <div class="row">
+    <div ng-controller="TabController as tabVm" class="col-md-12">
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" ng-click="tabVm.setTab(0)" ng-class="{'active': tabVm.activeTab === 0}"><a href="#form" aria-controls="form" role="tab" data-toggle="tab">Form</a></li>
+        <li role="presentation" ng-click="tabVm.setTab(1)" ng-class="{'active': tabVm.activeTab === 1}"><a href="#guests" aria-controls="guests" role="tab" data-toggle="tab">Guests</a></li>
+      </ul>
 
-              <form class="col-md-6 well">
-                <div class="form-group">
-                  <label for="guest-name">Guest Name</label>
-                  <input ng-model="formCtrl.data.guestName" type="text" class="form-control" id="guest-name" placeholder="">
-                </div>
-                <div class="form-group">
-                  <label for="transition-date">Transition Date</label>
-                  <input ng-model="formCtrl.data.transitionDate" type="date" class="form-control" id="transition-date" placeholder="">
-                </div>
-                <div class="radio">
-                  <label>
-                    <input ng-model="formCtrl.data.status" type="radio" name="pickup-dropoff" id="pickup" value="pickup" checked >
-                    Pick-up
-                  </label>
-                </div>
-                <div class="radio">
-                  <label>
-                    <input ng-model="formCtrl.data.status" type="radio" name="pickup-dropoff" id="dropoff" value="dropoff">
-                    Drop-off
-                  </label>
-                </div>
-                <div class="form-group">
-                  <label for="location">Location</label>
-                  <textarea ng-model="formCtrl.data.location" class="form-control" id="location"></textarea>
-                </div>
-                <button ng-click="formCtrl.addGuest()" type="submit" class="btn">Submit</button>
-              </form>
+      <!-- Tab panes -->
+      <div class="tab-content">
+        <!-- Tab pane 1 -->
+        <div ng-controller="FormController as formVm" role="tabpanel" ng-class="{'active': tabVm.activeTab === 0}" class="tab-pane active" id="form">
+          <form class="col-md-6 well" ng-submit = "formVm.submitForm()">
+            <div class="form-group">
+              <label for="guest-name">Guest Name</label>
+              <input ng-model="formVm.input.name" type="text" class="form-control" id="guest-name" placeholder="" required>
+            </div>
+            <div class="form-group">
+              <label for="transition-date">Transition Date</label>
+              <input ng-model="formVm.input.transitionDate" type="date" class="form-control" id="transition-date" placeholder="">
+            </div>
+            <div class="radio">
+              <label>
+                <input ng-model="formVm.input.actionOption" type="radio" name="pickup-dropoff" id="pickup" value="pickup" checked >
+                Pick-up
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input ng-model="formVm.input.actionOption" type="radio" name="pickup-dropoff" id="dropoff" value="dropoff">
+                Drop-off
+              </label>
+            </div>
+            <div class="form-group" ng-show = "formVm.needShowLocation()">
+              <label for="location">Location</label>
+              <textarea ng-model="formVm.input.pickupLocation" class="form-control" id="location"></textarea>
+            </div>
+            <button type="submit" class="btn">Submit</button>
+          </form>
 
-              <!-- bound display -->
-              <div ng-show="{{formCtrl.debugON}}" class="col-md-6 well">
-                <div ng-show="{{formCtrl.debugON}}" class="form-group">
-                  <label>JSON: </label>
-                  {{formCtrl.data | json}}<br/>
-                  {{formCtrl.jsonString}}
-                </div>
-                <div ng-show="{{formCtrl.debugON}}" class="form-group">
-                  <label>Name: </label>
-                  {{formCtrl.data.guestName}}
-                </div>
-                <div ng-show="{{formCtrl.debugON}}" class="form-group">
-                  <label>Transition Date: </label>
-                  {{formCtrl.data.transitionDate}}
-                </div>
-                <div ng-show="{{formCtrl.debugON}}" class="form-group">
-                  <label>Status: </label>
-                  {{formCtrl.data.status}}
-                </div>
-                <div ng-show="{{formCtrl.debugON}}" class="form-group">
-                  <label>Location: </label>
-                  {{formCtrl.data.location}}
-                </div>
-              </div>
-
+          <!-- bound display -->
+          <div ng-show="true" class="col-md-6 well">
+            <div ng-show="true" class="form-group">
+              <label>Name: </label>
+              {{formVm.input.name}}
+            </div>
+            <div ng-show="true" class="form-group">
+              <label>Transition Date: </label>
+              {{formVm.input.transitionDate.toDateString()}}
+            </div>
+            <div ng-show="true" class="form-group">
+              <label>Action Option: </label>
+              {{formVm.input.actionOption}}
+            </div>
+            <div ng-show="formVm.input.actionOption === 'pickup'" class="form-group">
+              <label>Location: </label>
+              {{formVm.input.pickupLocation}}
             </div>
           </div>
-
-          <!-- Tab pane 2 -->
-          <div role="tabpanel" class="tab-pane" id="guests">
-            <ul class="list-unstyled">
-              <li>
-
-              </li>
-            </ul>
-          </div>
-
         </div>
+
+        <!-- Tab pane 2 -->
+        <!-- <div role="tabpanel" class="tab-pane" id="guests"> -->
+        <div ng-controller="GuestsController as guestsVm" role="tabpanel" ng-class="{'active': tabVm.activeTab === 1}" class="tab-pane" id="guests">
+          <button type="button" class="btn row" ng-click="guestsVm.removeAllGuests()">Clear All</button>
+
+          <ul class="list-unstyled">
+            <br/>
+            <li class = "row">
+              <div class="col-sm-1"></div>
+              <div class="col-sm-3">Name</div>
+              <div class="col-sm-3">Action Option</div>
+            </li><br/>
+            <li ng-repeat = "guest in guestsVm.guests" class="row">
+              <div class="col-sm-1"></div>
+              <div class="col-sm-3">{{guest.name}}</div>
+              <div class="col-sm-3">{{guest.actionOption}}</div>
+              <button type="button" class="btn btn-danger col-sm-1" ng-click="guestsVm.removeGuest($index)">x</button>
+            </li>
+          </ul>
+        </div>
+
       </div>
     </div>
+  </div>
 
-  </body>
+</body>
 </html>

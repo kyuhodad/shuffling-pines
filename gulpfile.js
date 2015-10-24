@@ -28,15 +28,14 @@ gulp.task("buildLib", function() {
   return gulp.src([
     libRoot + "/jquery/dist/jquery.min.js",
     libRoot + "/angular/angular.min.js",
-    libRoot + "/bootstarp/dist/js/*.min.js"])
+    libRoot + "/bootstrap/dist/js/*.min.js"])
     .pipe(concat("lib.js"))
-    .pipe(uglify())
+    // .pipe(uglify())
     .pipe(gulp.dest(distRoot))
 });
 
 gulp.task('buildCSS', function() {
   return gulp.src([
-    // libRoot + '/bootstrap/dist/css/bootstrap.min.css'])
     libRoot + '/bootstrap/dist/css/bootstrap.min.css',
     libRoot + '/angular/*.css',
     appCss  + '/**/*.css'])
@@ -83,7 +82,12 @@ gulp.task('watch', function () {
   gulp.watch(appCss   + '/**/*.css',  ['buildCSS']);
   gulp.watch(appRoot  + '/**/*.html', ['moveHTML']);
 });
+gulp.task('watchWithoutTest', function () {
+  gulp.watch(appJs    + '/**/*.js',   ['buildApp']);
+  gulp.watch(appCss   + '/**/*.css',  ['buildCSS']);
+  gulp.watch(appRoot  + '/**/*.html', ['moveHTML']);
+});
 
-gulp.task('watchRun', ['watch', 'connect']);
+gulp.task('watchRun', ['watchWithoutTest', 'connect']);
 
 gulp.task('default', ['build', 'test', 'watch', 'connect']);
