@@ -1,58 +1,110 @@
 var app = angular.module('ShufflingPinesApp', []);
 
-app.service ("guestManager", ['$rootScope', function ($rootScope) {
-
-  this.getGuestListFromStorage = function () {
-    var item = localStorage.getItem("ShufflingPinesApp_Guests");
-    return item ? angular.fromJson(item) : [];
-    // return item ? JSON.parse(item) : [];
-  };
-
-  this.updateGuestListOnStorage = function (guests) {
-    localStorage.setItem('ShufflingPinesApp_Guests', angular.toJson(guests));
-    // localStorage.setItem('ShufflingPinesApp_Guests', JSON.stringify(guests));
-  };
-
-  this.addGuest = function (guestData) {
-    $rootScope.$broadcast('ADD_GUEST', guestData);
-  };
-  this.removeGuest = function (index) {
-    $rootScope.$broadcast('REMOVE_GUEST', index);
-  };
-}]);
-
 // ---------------------
 // Guest Data object to store
 // ---------------------
-function GuestData (formInput) {
-    this.name = formInput.name;
-    this.transitionDate = formInput.transitionDate ? new Date(formInput.transitionDate.valueOf()) : {};
-    this.actionOption = formInput.actionOption;
-    this.pickupLocation = formInput.pickupLocation;
+function GuestData (dataIn) {
+    var formInput = dataIn || {};
+    this.name = formInput.name || '';
+    this.transitionDate = formInput.transitionDate ? new Date(formInput.transitionDate.valueOf()) : new Date();
+    this.actionOption = formInput.actionOption || 'pickup';
+    this.pickupLocation = formInput.pickupLocation || 'Gate1';
+    this.actionState0 = formInput.actionState0 || false;
+    this.actionState1 = formInput.actionState1 || false;
+    this.actionState2 = formInput.actionState2 || false;
+    this.isDeleted = formInput.isDeleted || false;
+
+    this.isValid = function () {
+      if (!this.name || !this.transitionDate) return false;
+      if ( (this.actionOption !== "pickup") && (this.actionOption !== "dropoff") ) return false;
+      if ( (this.actionOption === "pickup") && !this.pickupLocation) return false;
+      return true;
+    };
+
+    this.actionOptionString = function () {
+      return this.actionOption === "pickup" ? "Pick-up" :
+             this.actionOption === "dropoff" ? "Drop-off" : "";
+    };
+
+    this.getPickupLocation = function () {
+      return this.actionOption === "pickup" ? this.pickupLocation : "";
+    };
+
+    this.getStateString = function (stateId) {
+      if (stateId === 0) return this.actionOptionString();
+      if (stateId === 1) return "Arrived";
+      else return "Pick-up";
+    };
+
+    this.isStateDisabled = function (stateId) {
+      if (this.isDeleted) return true;
+      if (stateId === 2) return !this.actionState1;
+      if (stateId === 1) return !this.actionState0;
+      return false;
+    };
+
+    this.onChangeActionState = function (stateId) {
+      if (stateId === 0) {
+        if (!this.actionState0) {
+          this.actionState1 = this.actionState2 = false;
+        }
+      } else if (stateId === 1) {
+        if (!this.actionState1) {
+          this.actionState2 = false;
+        }
+      }
+    }
+
+    this.classDeleted = function () {
+      return this.isDeleted ? "deleted-guest" : "";
+    }
 }
 
 // ---------------------
-// Tab Controller....
+// Guest manager service....
 // ---------------------
-app.controller('TabController', ['$scope', 'guestManager',  function($scope, guestManager){
-  var vm = this;
+app.service ("guestManager", ['$rootScope', function ($rootScope) {
+  var self = this;
+  var itemFromStorage = localStorage.getItem("ShufflingPinesApp_Guests");
+  var guestsTemp = itemFromStorage ? angular.fromJson(itemFromStorage) : [];
+  this.guests = [];
+  for (var i=0; i<guestsTemp.length; i++) {
+    this.guests[i] = new GuestData(guestsTemp[i]);
+  }
 
-  vm.activeTab = 0;
+  this.update = function () {
+    localStorage.setItem('ShufflingPinesApp_Guests', angular.toJson(self.guests));
+    console.log('Guest List:');
+    console.log(angular.toJson(this.guests, true));
+  }
 
-  vm.setTab = function (idx) {
-    vm.activeTab = idx;
+  this.addGuest = function (guestData) {
+    this.guests.push(guestData);
+    this.update ();
   };
 
-  // Event handlers
-  $scope.$on('ADD_GUEST', function (evt) {
-    vm.activeTab = 1;
-  });
+  this.softDeleteGuest = function (index) {
+    this.guests[index].isDeleted = true;
+    this.update ();
+  };
+
+  this.deleteGuest = function (index) {
+    this.guests.splice(index, 1);
+    this.update ();
+  };
+
+  // This is for testing purpose.
+  this.deleteAllGuests = function () {
+    this.guests.length = 0;
+    this.update ();
+  };
+
 }]);
 
 // ---------------------
 // Form Controller....
 // ---------------------
-app.controller('FormController', ['$scope', 'guestManager',  function($scope, guestManager){
+app.controller('FormController', ['$scope', 'guestManager', '$timeout', function($scope, guestManager, $timeout) {
   var vm = this;
 
   // Initialize
@@ -60,9 +112,13 @@ app.controller('FormController', ['$scope', 'guestManager',  function($scope, gu
 
   // Submit the form input
   vm.submitForm = function () {
-    if (vm.input.name) {
-      guestManager.addGuest(new GuestData(vm.input));
+    if (vm.input.isValid()) {
+      // guestManager.addGuest(new GuestData(vm.input));
+      guestManager.addGuest(vm.input);
       initFormInput();
+
+      // Show the guests tab.
+      $('#guestsTab').tab('show');
     }
   };
 
@@ -73,13 +129,13 @@ app.controller('FormController', ['$scope', 'guestManager',  function($scope, gu
 
   // initialize form input
   function initFormInput () {
-    vm.input = {
-      name:           '',
-      transitionDate: new Date(),
-      actionOption:   'pickup',
-      pickupLocation: ''
-    };
+    vm.input = new GuestData ();
   }
+
+  function isInputValid () {
+    vm.input.name
+  }
+
 }]);
 
 // ---------------------
@@ -88,37 +144,40 @@ app.controller('FormController', ['$scope', 'guestManager',  function($scope, gu
 app.controller('GuestsController', ['$scope', 'guestManager',  function($scope, guestManager){
   var vm = this;
 
-  vm.guests = guestManager.getGuestListFromStorage ();
-
-  vm.addGuest = function (guestData) {
-    vm.guests.push(guestData);
-    vm.updateGuestList ();
-    console.log('Guest List:');
-    console.log(angular.toJson(vm.guests, true));
+  vm.getGuestList = function () {
+    return guestManager.guests;
   };
 
-  vm.removeGuest = function (index) {
+  vm.softDeleteGuest = function (index) {
+    guestManager.softDeleteGuest(index);
+  };
+
+  vm.deleteGuest = function (index) {
     if (window.confirm('Are you sure to delete a guest data?')) {
-      vm.guests.splice(index, 1);
-      vm.updateGuestList ();
+      guestManager.deleteGuest(index);
     }
   };
 
-  vm.removeAllGuests = function () {
-    vm.guests.length = 0;
-    vm.updateGuestList ();
+  vm.isDeleted = function (index) {
+    return guestManager.guests[index].isDeleted;
   };
 
-  vm.updateGuestList = function () {
-    guestManager.updateGuestListOnStorage(vm.guests);
+  vm.deleteAllGuests = function () {
+    guestManager.deleteAllGuests();
   };
 
-  // Event handlers
-  $scope.$on('ADD_GUEST', function (evt, guestData) {
-    vm.addGuest(guestData);
-  });
-  $scope.$on('REMOVE_GUEST', function (evt, index) {
-    vm.removeGuest(index);
-  });
+  vm.update = function () {
+    guestManager.update ();
+  };
+
+  vm.onChangeActionState = function (index, stateId) {
+    guestManager.guests[index].onChangeActionState(stateId);
+    guestManager.update ();
+  }
+
+  vm.onChangeActionState = function (index, stateId) {
+    guestManager.guests[index].onChangeActionState(stateId);
+    guestManager.update ();
+  }
 
 }]);

@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <title>Shuffling Pines</title>
 
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <script src="lib.js"></script>
   <script src="app.js"></script>
 
@@ -21,17 +21,21 @@
 <body>
   <h1>Shuffling Pines</h1>
   <div class="row">
-    <div ng-controller="TabController as tabVm" class="col-md-12">
+    <div class="col-md-12">
       <!-- Nav tabs -->
       <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" ng-click="tabVm.setTab(0)" ng-class="{'active': tabVm.activeTab === 0}"><a href="#form" aria-controls="form" role="tab" data-toggle="tab">Form</a></li>
-        <li role="presentation" ng-click="tabVm.setTab(1)" ng-class="{'active': tabVm.activeTab === 1}"><a href="#guests" aria-controls="guests" role="tab" data-toggle="tab">Guests</a></li>
+        <li role="presentation" class="active">
+          <a href="#form" aria-controls="form" role="tab" data-toggle="tab">Form</a>
+        </li>
+        <li role="presentation">
+          <a id="guestsTab" href="#guests" aria-controls="guests" role="tab" data-toggle="tab">Guests</a>
+        </li>
       </ul>
 
       <!-- Tab panes -->
       <div class="tab-content">
         <!-- Tab pane 1 -->
-        <div ng-controller="FormController as formVm" role="tabpanel" ng-class="{'active': tabVm.activeTab === 0}" class="tab-pane active" id="form">
+        <div ng-controller="FormController as formVm" role="tabpanel" class="tab-pane active" id="form">
           <form class="col-md-6 well" ng-submit = "formVm.submitForm()">
             <div class="form-group">
               <label for="guest-name">Guest Name</label>
@@ -55,7 +59,7 @@
             </div>
             <div class="form-group" ng-show = "formVm.needShowLocation()">
               <label for="location">Location</label>
-              <textarea ng-model="formVm.input.pickupLocation" class="form-control" id="location"></textarea>
+              <textarea ng-model="formVm.input.pickupLocation" class="form-control" id="location" ng-required=""></textarea>
             </div>
             <button type="submit" class="btn">Submit</button>
           </form>
@@ -72,7 +76,7 @@
             </div>
             <div ng-show="true" class="form-group">
               <label>Action Option: </label>
-              {{formVm.input.actionOption}}
+              {{formVm.input.actionOptionString()}}
             </div>
             <div ng-show="formVm.input.actionOption === 'pickup'" class="form-group">
               <label>Location: </label>
@@ -83,23 +87,52 @@
 
         <!-- Tab pane 2 -->
         <!-- <div role="tabpanel" class="tab-pane" id="guests"> -->
-        <div ng-controller="GuestsController as guestsVm" role="tabpanel" ng-class="{'active': tabVm.activeTab === 1}" class="tab-pane" id="guests">
-          <button type="button" class="btn row" ng-click="guestsVm.removeAllGuests()">Clear All</button>
+        <div ng-controller="GuestsController as guestsVm" role="tabpanel" class="tab-pane" id="guests">
+          <button type="button" class="btn row" ng-click="guestsVm.deleteAllGuests()">Clear All</button>
 
-          <ul class="list-unstyled">
-            <br/>
-            <li class = "row">
-              <div class="col-sm-1"></div>
-              <div class="col-sm-3">Name</div>
-              <div class="col-sm-3">Action Option</div>
-            </li><br/>
-            <li ng-repeat = "guest in guestsVm.guests" class="row">
-              <div class="col-sm-1"></div>
-              <div class="col-sm-3">{{guest.name}}</div>
-              <div class="col-sm-3">{{guest.actionOption}}</div>
-              <button type="button" class="btn btn-danger col-sm-1" ng-click="guestsVm.removeGuest($index)">x</button>
-            </li>
-          </ul>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th class="col-sm-2">Name</th>
+                <th class="col-sm-2">Transition Date</th>
+                <th class="col-sm-4">Status</th>
+                <th class="col-sm-3">Pickup Location</th>
+                <th class="col-sm-1">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat = "guest in guestsVm.getGuestList()">
+                <td ng-class="guest.classDeleted()">{{guest.name}}</td>
+                <td ng-class="guest.classDeleted()">{{guest.transitionDate.toDateString()}}</td>
+                <td ng-class="guest.classDeleted()">
+                  <label class="checkbox-inline">
+                    <input ng-model="guest.actionState0" type="checkbox"
+                           ng-checked="guest.actionState0" ng-disabled="guest.isStateDisabled(0)"
+                           ng-change="guestsVm.onChangeActionState(0)">{{guest.getStateString(0)}}
+                  </label>
+                  <label class="checkbox-inline">
+                    <input ng-model="guest.actionState1" type="checkbox"
+                           ng-disabled="guest.isStateDisabled(1)"
+                           ng-change="guestsVm.onChangeActionState(1)">{{guest.getStateString(1)}}
+                  </label>
+                  <label class="checkbox-inline">
+                    <input ng-model="guest.actionState2" type="checkbox"
+                           ng-disabled="guest.isStateDisabled(2)"
+                           ng-change="guestsVm.onChangeActionState(2)">{{guest.getStateString(2)}}
+                  </label>
+                </td>
+                <td ng-class="guest.classDeleted()" ng-disabled="guest.isDeleted">{{guest.getPickupLocation()}}</td>
+                <td>
+                  <form class="form-inline">
+                    <input ng-model="guest.isDeleted" type="checkbox" ng-change="guestsVm.update()">
+                    <button type="button" class="btn btn-danger btn-circle btn-sm" ng-click="guestsVm.deleteGuest($index)" ng-show="guest.isDeleted">
+                      <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
       </div>

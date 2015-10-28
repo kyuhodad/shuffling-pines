@@ -1,7 +1,7 @@
 // 'use strict';
 describe('Shuffling Pines App', function () {
   var guestManager;
-  var tapVm, formVm, guestsVm;
+  var formVm, guestsVm;
   var fakeLocalStorage;
 
   //
@@ -10,16 +10,12 @@ describe('Shuffling Pines App', function () {
   beforeEach(module('ShufflingPinesApp'));
   beforeEach( function () {
     inject (['$controller', '$rootScope', 'guestManager', function ($controller, $rootScope, $guestManager) {
-      // Create TabController under rootScope
-      var tabScope = $rootScope.$new();
-      tapVm = $controller('TabController as tapVm', {$scope:tabScope});
-
-      // Create FormController under tabScope
-      var formScope = tabScope.$new();
+      // Create FormController under $rootScope
+      var formScope = $rootScope.$new();
       formVm = $controller('FormController as formVm', {$scope:formScope});
 
-      // Create GuestsController under tabScope
-      var guestsScope = tabScope.$new();
+      // Create GuestsController under $rootScope
+      var guestsScope = $rootScope.$new();
       guestsVm = $controller('GuestsController as guestsVm', {$scope:guestsScope});
 
       guestManager = $guestManager;
@@ -33,7 +29,7 @@ describe('Shuffling Pines App', function () {
     fakeLocalStorage = new FakeLocalStorage();
     spyOn(localStorage, "getItem").and.callFake(fakeLocalStorage.getItem);
     spyOn(localStorage, "setItem").and.callFake(fakeLocalStorage.setItem);
-    guestsVm.removeAllGuests();
+    guestsVm.deleteAllGuests();
 
     spyOn(console, "log");
   });
@@ -47,7 +43,10 @@ describe('Shuffling Pines App', function () {
             name:           '',
             transitionDate: new Date(),
             actionOption:   'pickup',
-            pickupLocation: ''
+            pickupLocation: 'Gate1',
+            actionState0: false,
+            actionState1: false,
+            actionState2: false
     };
 
     it('should be initialized with default values.', function() {
@@ -64,20 +63,30 @@ describe('Shuffling Pines App', function () {
     });
 
     it('should not submit without name input.', function() {
-      var numberOfGuests = guestManager.getGuestListFromStorage().length;
+      var numberOfGuests = guestManager.guests.length;
       formVm.submitForm ();
-      var numberOfGuests2 = guestManager.getGuestListFromStorage().length;
+      var numberOfGuests2 = guestManager.guests.length;
       expect(numberOfGuests2).toBe(numberOfGuests);
     });
 
-    it('should submit with valid name input.', function() {
-      var oldNumberOfGuests = guestManager.getGuestListFromStorage().length;
+    it('should not submit with invalid pickup location input.', function() {
+      var oldNumberOfGuests = guestManager.guests.length;
+      formVm.input.name = "Lee";
+      formVm.input.pickupLocation = "";
+      formVm.submitForm ();
+
+      var guestList = guestManager.guests;
+      expect(guestList.length).toBe(oldNumberOfGuests);
+    });
+
+    it('should submit with valid input.', function() {
+      var oldNumberOfGuests = guestManager.guests.length;
 
       var name = "Kyeong Hwi Lee";
       formVm.input.name = name;
       formVm.submitForm ();
-      var guestList = guestManager.getGuestListFromStorage();
 
+      var guestList = guestManager.guests;
       expect(guestList.length).toBe(oldNumberOfGuests + 1);
       expect(guestList[oldNumberOfGuests].name).toBe(name);
     });
@@ -89,6 +98,17 @@ describe('Shuffling Pines App', function () {
       var logInput = console.log.calls.argsFor(1);
       expect(logInput).toMatch(name);
     });
+
+    // if ('should move to Guests tab after submitting the form.', function () {
+    //   var tabNavElem  = $('<ul class="nav nav-tabs">' +
+    //                       '<li role="presentation" class="active"><a></a></li>' +
+    //                       '<li id="guestsTab" role="presentation"></li>' +
+    //                       '</ul>');
+    //   var tabContents = $('<div class="tab-content">' +
+    //                       '<div class="tab-pane active" id="form"></div>' +
+    //                       '<div class="tab-pane" id="guests"></div>' +
+    //                       '</div>');
+    // });
 
   });
 

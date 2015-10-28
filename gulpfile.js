@@ -41,7 +41,7 @@ gulp.task('buildCSS', function() {
     appCss  + '/**/*.css'])
     .pipe(concat('styles.css'))
     .pipe(minifycss())
-    .pipe(gulp.dest(distRoot))
+    .pipe(gulp.dest(distRoot + '/css'))
     .pipe(connect.reload());
 });
 
@@ -52,7 +52,13 @@ gulp.task('moveHTML', function() {
     .pipe(connect.reload());
 });
 
-gulp.task('build', ['buildApp', 'buildLib', 'buildCSS', 'moveHTML']);
+gulp.task('moveFont', function() {
+  return gulp.src([
+    libRoot + '/bootstrap/dist/fonts/*.*'])
+    .pipe(gulp.dest(distRoot + '/fonts'));
+});
+
+gulp.task('build', ['buildApp', 'buildLib', 'buildCSS', 'moveHTML', 'moveFont']);
 
 gulp.task('karma', function (done) {
   new Server({
