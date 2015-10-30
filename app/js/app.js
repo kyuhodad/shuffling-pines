@@ -1,17 +1,16 @@
 var app = angular.module('ShufflingPinesApp', []);
 
 // ---------------------
-// Guest Data object to store
+// Factory for Guest Data object
 // ---------------------
-function GuestData (dataIn) {
+app.factory("GuestData", function () {
+  var GuestData = function (dataIn) {
     var formInput = dataIn || {};
     this.name = formInput.name || '';
     this.transitionDate = formInput.transitionDate ? new Date(formInput.transitionDate.valueOf()) : new Date();
     this.actionOption = formInput.actionOption || 'pickup';
     this.pickupLocation = formInput.pickupLocation || 'Gate1';
-    this.actionState0 = formInput.actionState0 || false;
-    this.actionState1 = formInput.actionState1 || false;
-    this.actionState2 = formInput.actionState2 || false;
+    this.actionState = formInput.actionState || 0;
     this.isDeleted = formInput.isDeleted || false;
 
     this.isValid = function () {
@@ -21,55 +20,60 @@ function GuestData (dataIn) {
       return true;
     };
 
+    // Returns the display string for the action options
     this.actionOptionString = function () {
       return this.actionOption === "pickup" ? "Pick-up" :
              this.actionOption === "dropoff" ? "Drop-off" : "";
     };
 
+    // Returns pickup location only if the action option is "pickup"
     this.getPickupLocation = function () {
       return this.actionOption === "pickup" ? this.pickupLocation : "";
     };
 
-    this.getStateString = function (stateId) {
+    // Get the current status string
+    this.getCurrentStatusString = function () {
+      return this.getStatusString (this.actionState);
+    }
+
+    // Get status string of given state id
+    this.getStatusString = function (stateId) {
       if (stateId === 0) return this.actionOptionString();
       if (stateId === 1) return "Arrived";
       else return "Pick-up";
     };
 
-    this.isStateDisabled = function (stateId) {
-      if (this.isDeleted) return true;
-      if (stateId === 2) return !this.actionState1;
-      if (stateId === 1) return !this.actionState0;
-      return false;
-    };
-
-    this.onChangeActionState = function (stateId) {
-      if (stateId === 0) {
-        if (!this.actionState0) {
-          this.actionState1 = this.actionState2 = false;
-        }
-      } else if (stateId === 1) {
-        if (!this.actionState1) {
-          this.actionState2 = false;
-        }
-      }
-    }
-
+    //
     this.classDeleted = function () {
       return this.isDeleted ? "deleted-guest" : "";
     }
-}
+  };
+
+  return GuestData;
+});
 
 // ---------------------
 // Guest manager service....
 // ---------------------
-app.service ("guestManager", ['$rootScope', function ($rootScope) {
+app.service ("guestManager", ['GuestData', function (GuestData) {
   var self = this;
   var itemFromStorage = localStorage.getItem("ShufflingPinesApp_Guests");
   var guestsTemp = itemFromStorage ? angular.fromJson(itemFromStorage) : [];
   this.guests = [];
-  for (var i=0; i<guestsTemp.length; i++) {
-    this.guests[i] = new GuestData(guestsTemp[i]);
+  if (guestsTemp.length === 0) {
+    this.guests.push( new GuestData({
+      name: 'John Smith',
+      transitionDate: new Date(2020, 0, 30)
+    }));
+    this.guests.push( new GuestData({
+      name: 'Terry Sherman',
+      transitionDate: new Date(2015, 6, 20),
+      actionOption: 'dropoff'
+    }));
+  } else {
+    for (var i=0; i<guestsTemp.length; i++) {
+      this.guests[i] = new GuestData(guestsTemp[i]);
+    }
   }
 
   this.update = function () {
@@ -93,18 +97,21 @@ app.service ("guestManager", ['$rootScope', function ($rootScope) {
     this.update ();
   };
 
+  this.isDeleted = function (index) {
+    return this.guests[index].isDeleted;
+  }
+
   // This is for testing purpose.
   this.deleteAllGuests = function () {
     this.guests.length = 0;
     this.update ();
   };
-
 }]);
 
 // ---------------------
 // Form Controller....
 // ---------------------
-app.controller('FormController', ['$scope', 'guestManager', '$timeout', function($scope, guestManager, $timeout) {
+app.controller('FormController', ['guestManager', 'GuestData', function(guestManager, GuestData) {
   var vm = this;
 
   // Initialize
@@ -113,7 +120,6 @@ app.controller('FormController', ['$scope', 'guestManager', '$timeout', function
   // Submit the form input
   vm.submitForm = function () {
     if (vm.input.isValid()) {
-      // guestManager.addGuest(new GuestData(vm.input));
       guestManager.addGuest(vm.input);
       initFormInput();
 
@@ -141,7 +147,7 @@ app.controller('FormController', ['$scope', 'guestManager', '$timeout', function
 // ---------------------
 // Guests Controller....
 // ---------------------
-app.controller('GuestsController', ['$scope', 'guestManager',  function($scope, guestManager){
+app.controller('GuestsController', ['guestManager',  function(guestManager){
   var vm = this;
 
   vm.getGuestList = function () {
@@ -159,7 +165,7 @@ app.controller('GuestsController', ['$scope', 'guestManager',  function($scope, 
   };
 
   vm.isDeleted = function (index) {
-    return guestManager.guests[index].isDeleted;
+    return guestManager.isDeleted(index);
   };
 
   vm.deleteAllGuests = function () {
@@ -169,15 +175,4 @@ app.controller('GuestsController', ['$scope', 'guestManager',  function($scope, 
   vm.update = function () {
     guestManager.update ();
   };
-
-  vm.onChangeActionState = function (index, stateId) {
-    guestManager.guests[index].onChangeActionState(stateId);
-    guestManager.update ();
-  }
-
-  vm.onChangeActionState = function (index, stateId) {
-    guestManager.guests[index].onChangeActionState(stateId);
-    guestManager.update ();
-  }
-
 }]);

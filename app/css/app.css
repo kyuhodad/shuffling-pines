@@ -2,7 +2,7 @@ table th, table {
   text-align: left;
 }
 
-.deleted-guest {
+.deleted_guest {
   color: lightgrey;
   background-color: grey;
 }

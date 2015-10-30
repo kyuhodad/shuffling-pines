@@ -8,14 +8,6 @@
   <link rel="stylesheet" href="css/styles.css" />
   <script src="lib.js"></script>
   <script src="app.js"></script>
-
-  <!-- <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.min.css" />
-
-  <script src="../bower_components/jquery/dist/jquery.min.js"></script>
-  <script src="../bower_components/angular/angular.min.js"></script>
-  <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-  <script src="js/app.js"></script> -->
 </head>
 
 <body>
@@ -93,35 +85,39 @@
           <table class="table table-striped">
             <thead>
               <tr>
-                <th class="col-sm-2">Name</th>
+                <th class="col-sm-3">Name</th>
                 <th class="col-sm-2">Transition Date</th>
-                <th class="col-sm-4">Status</th>
+                <th class="col-sm-3">Status</th>
                 <th class="col-sm-3">Pickup Location</th>
                 <th class="col-sm-1">Delete</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat = "guest in guestsVm.getGuestList()">
-                <td ng-class="guest.classDeleted()">{{guest.name}}</td>
-                <td ng-class="guest.classDeleted()">{{guest.transitionDate.toDateString()}}</td>
-                <td ng-class="guest.classDeleted()">
-                  <label class="checkbox-inline">
-                    <input ng-model="guest.actionState0" type="checkbox"
-                           ng-checked="guest.actionState0" ng-disabled="guest.isStateDisabled(0)"
-                           ng-change="guestsVm.onChangeActionState(0)">{{guest.getStateString(0)}}
-                  </label>
-                  <label class="checkbox-inline">
-                    <input ng-model="guest.actionState1" type="checkbox"
-                           ng-disabled="guest.isStateDisabled(1)"
-                           ng-change="guestsVm.onChangeActionState(1)">{{guest.getStateString(1)}}
-                  </label>
-                  <label class="checkbox-inline">
-                    <input ng-model="guest.actionState2" type="checkbox"
-                           ng-disabled="guest.isStateDisabled(2)"
-                           ng-change="guestsVm.onChangeActionState(2)">{{guest.getStateString(2)}}
-                  </label>
+                <td ng-class="{deleted_guest: guest.isDeleted}">{{guest.name}}</td>
+                <td ng-class="{deleted_guest: guest.isDeleted}">{{guest.transitionDate.toDateString()}}</td>
+                <td ng-class="{deleted_guest: guest.isDeleted}">
+                  <form class="form-inline">
+                    <span class="label label-primary">
+                      {{guest.getCurrentStatusString()}}
+                    </span>&nbsp;
+                    <label ng-show="guest.actionState === 0">
+                      <button type="button" class="btn btn-circle btn-sm" ng-click="guest.actionState=1"
+                              ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">
+                        <span class="glyphicon glyphicon-circle-arrow-right"></span>
+                        {{guest.getStatusString(1)}}
+                      </button>
+                    </label>
+                    <label ng-show="guest.actionState === 1">
+                      <button type="button" class="btn btn-circle btn-sm" ng-click="guest.actionState=2"
+                              ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">
+                        <span class="glyphicon glyphicon-circle-arrow-right"></span>
+                        {{guest.getStatusString(2)}}
+                      </button>
+                    </label>
+                  </form>
                 </td>
-                <td ng-class="guest.classDeleted()" ng-disabled="guest.isDeleted">{{guest.getPickupLocation()}}</td>
+                <td ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">{{guest.getPickupLocation()}}</td>
                 <td>
                   <form class="form-inline">
                     <input ng-model="guest.isDeleted" type="checkbox" ng-change="guestsVm.update()">
@@ -134,7 +130,6 @@
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   </div>
