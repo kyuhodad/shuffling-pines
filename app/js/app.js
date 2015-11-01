@@ -16,19 +16,22 @@ app.factory("GuestData", function () {
     this.isValid = function () {
       if (!this.name || !this.transitionDate) return false;
       if ( (this.actionOption !== "pickup") && (this.actionOption !== "dropoff") ) return false;
-      if ( (this.actionOption === "pickup") && !this.pickupLocation) return false;
+      if ( (this.actionOption === "pickup") ) {
+        if (!this.pickupLocation) return false;
+        if (this.pickupLocation.length === 0) return fasle;
+      }
       return true;
+    };
+
+    // Returns pickup location only if the action option is "pickup"
+    this.getPickupLocation = function () {
+      return this.actionOption === "pickup" ? this.pickupLocation : "";
     };
 
     // Returns the display string for the action options
     this.actionOptionString = function () {
       return this.actionOption === "pickup" ? "Pick-up" :
              this.actionOption === "dropoff" ? "Drop-off" : "";
-    };
-
-    // Returns pickup location only if the action option is "pickup"
-    this.getPickupLocation = function () {
-      return this.actionOption === "pickup" ? this.pickupLocation : "";
     };
 
     // Get the current status string
@@ -42,11 +45,6 @@ app.factory("GuestData", function () {
       if (stateId === 1) return "Arrived";
       else return "Pick-up";
     };
-
-    //
-    this.classDeleted = function () {
-      return this.isDeleted ? "deleted-guest" : "";
-    }
   };
 
   return GuestData;
@@ -137,11 +135,6 @@ app.controller('FormController', ['guestManager', 'GuestData', function(guestMan
   function initFormInput () {
     vm.input = new GuestData ();
   }
-
-  function isInputValid () {
-    vm.input.name
-  }
-
 }]);
 
 // ---------------------
