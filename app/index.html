@@ -94,7 +94,12 @@
             </thead>
             <tbody>
               <tr ng-repeat = "(index, guest) in guestsVm.getGuestList()">
-                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">{{guest.name}}</td>
+                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-click="guestsVm.onBeginEdit(index, 'name')">
+                  <span ng-hide="guestsVm.isInEditMode(index, 'name')">{{guest.name}}</span>
+                  <form class="form-inline" ng-submit="guestsVm.onEndEdit()">
+                    <input ng-model="guestsVm.edit.data.name" type="text" ng-show="guestsVm.isInEditMode(index, 'name')" ng-blur="guestsVm.onEndEdit()" >
+                  </form>
+                </td>
                 <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">{{guest.transitionDate.toDateString()}}</td>
                 <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">
                   <form class="form-inline">

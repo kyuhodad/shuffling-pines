@@ -152,7 +152,7 @@ app.controller('FormController', ['guestManager', 'GuestData', function(guestMan
 // ---------------------
 // Guests Controller....
 // ---------------------
-app.controller('GuestsController', ['guestManager',  function(guestManager){
+app.controller('GuestsController', ['guestManager', 'GuestData', function(guestManager, GuestData){
   var vm = this;
   vm._DEBUG = false;
 
@@ -202,6 +202,29 @@ app.controller('GuestsController', ['guestManager',  function(guestManager){
 
   vm.deleteAllGuests = function () {
     guestManager.deleteAllGuests();
+  };
+
+  vm.edit = {};
+  vm.edit.data = new GuestData();
+  vm.edit.index = -1;
+  vm.edit.key = "";
+  vm.onBeginEdit = function (index, keyToEdit) {
+    vm.edit.index = index;
+    vm.edit.key = keyToEdit;
+    vm.edit.data[vm.edit.key] = guestManager.guests[vm.edit.index][vm.edit.key];
+  };
+  vm.isInEditMode = function (index, keyToEdit) {
+    if (vm.edit.index === -1) {
+      return false;
+    }
+    return ( (vm.edit.index === index) && (vm.edit.key === keyToEdit) );
+  };
+  vm.onEndEdit = function () {
+    if (vm.edit.index >= 0) {
+      guestManager.guests[vm.edit.index][vm.edit.key] = vm.edit.data[vm.edit.key];
+    }
+    vm.edit.index = -1;
+    vm.edit.key = "";
   };
 
 }]);
