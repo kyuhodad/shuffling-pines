@@ -41,6 +41,8 @@ After installing all the components, run `gulp build` to build distribution fold
 +-- tests
 |   +-- specs
 |       +-- appSpec.js (Main Jasmine based test codes)
++-- .gitignore (Git ignore file)
++-- .jshitrc (jshint rc file)
 +-- gulpfile.js (Gulp configuration file)
 +-- karma.conf.js (Karma configuration file)
 +-- bower.json (Bower component management file)
