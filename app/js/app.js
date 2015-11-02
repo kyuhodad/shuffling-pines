@@ -14,11 +14,17 @@ app.factory("GuestData", function () {
     this.isDeleted = formInput.isDeleted || false;
 
     this.isValid = function () {
-      if (!this.name || !this.transitionDate) return false;
-      if ( (this.actionOption !== "pickup") && (this.actionOption !== "dropoff") ) return false;
+      if (!this.name || !this.transitionDate) { return false; }
+      if ( (this.actionOption !== "pickup") && (this.actionOption !== "dropoff") ) {
+        return false;
+      }
       if ( (this.actionOption === "pickup") ) {
-        if (!this.pickupLocation) return false;
-        if (this.pickupLocation.length === 0) return fasle;
+        if (!this.pickupLocation) {
+          return false;
+        }
+        if (this.pickupLocation.length === 0) {
+          return false;
+        }
       }
       return true;
     };
@@ -37,13 +43,19 @@ app.factory("GuestData", function () {
     // Get the current status string
     this.getCurrentStatusString = function () {
       return this.getStatusString (this.actionState);
-    }
+    };
 
     // Get status string of given state id
     this.getStatusString = function (stateId) {
-      if (stateId === 0) return this.actionOptionString();
-      if (stateId === 1) return "Arrived";
-      else return "Pick-up";
+      if (stateId === 0) {
+        return this.actionOptionString();
+      }
+      if (stateId === 1) {
+        return "Arrived";
+      }
+      else {
+        return "Pick-up";
+      }
     };
   };
 
@@ -78,7 +90,7 @@ app.service ("guestManager", ['GuestData', function (GuestData) {
     localStorage.setItem('ShufflingPinesApp_Guests', angular.toJson(self.guests));
     console.log('Guest List:');
     console.log(angular.toJson(this.guests, true));
-  }
+  };
 
   this.addGuest = function (guestData) {
     this.guests.push(guestData);
@@ -97,7 +109,7 @@ app.service ("guestManager", ['GuestData', function (GuestData) {
 
   this.isDeleted = function (index) {
     return this.guests[index].isDeleted;
-  }
+  };
 
   // This is for testing purpose.
   this.deleteAllGuests = function () {
@@ -142,13 +154,44 @@ app.controller('FormController', ['guestManager', 'GuestData', function(guestMan
 // ---------------------
 app.controller('GuestsController', ['guestManager',  function(guestManager){
   var vm = this;
+  vm._DEBUG = false;
 
   vm.getGuestList = function () {
     return guestManager.guests;
   };
 
+  vm.needToShowChangeStateButton = function (index, buttonName) {
+    // buttonName = 'Arrived' or 'Pickup'
+    if (buttonName === 'Arrived') {
+      return guestManager.guests[index].actionState === 0;
+    }
+    if (buttonName === 'Pickup') {
+      return guestManager.guests[index].actionState === 1;
+    }
+    return false;
+  };
+
+  vm.onClickChangeActionState = function (index) {
+    if (guestManager.guests[index].actionState > 1) {
+      return;
+    }
+    guestManager.guests[index].actionState++;
+  };
+
+  vm.getCurrentStatusString = function (index) {
+    return guestManager.guests[index].getCurrentStatusString();
+  };
+
   vm.softDeleteGuest = function (index) {
     guestManager.softDeleteGuest(index);
+  };
+
+  vm.onChangeSoftDeleteGuest = function (index) {
+    guestManager.update();
+  };
+
+  vm.isSoftDeleted = function (index) {
+    return guestManager.isDeleted(index);
   };
 
   vm.deleteGuest = function (index) {
@@ -157,15 +200,8 @@ app.controller('GuestsController', ['guestManager',  function(guestManager){
     }
   };
 
-  vm.isDeleted = function (index) {
-    return guestManager.isDeleted(index);
-  };
-
   vm.deleteAllGuests = function () {
     guestManager.deleteAllGuests();
   };
 
-  vm.update = function () {
-    guestManager.update ();
-  };
 }]);

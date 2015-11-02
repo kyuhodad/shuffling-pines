@@ -154,7 +154,9 @@ describe('Shuffling Pines App', function () {
       // Search a guest with given name
       this.searchGuestFromList = function (name) {
         for(var key in guestManager.guests) {
-          if (guestManager.guests[key].name === name) return key;
+          if (guestManager.guests[key].name === name) {
+            return key;
+          }
         }
         return -1;
       };
@@ -171,6 +173,21 @@ describe('Shuffling Pines App', function () {
 
     it('should have instances of GuestData type object in guests array.', function () {
       expect(guestManager.guests[0] instanceof GuestData).toBeTruthy();
+    });
+
+    it('should save date to localStorage on calling update function.', function () {
+      var newGuestName = 'Guest New';
+      expect(this.matchFromLocalStorage(newGuestName)).not.toBeTruthy();
+
+      localStorage.setItem.calls.reset();
+      expect(localStorage.setItem).not.toHaveBeenCalled();
+
+      var guest = new GuestData({name: newGuestName});
+      guestManager.guests.push(guest);
+      guestManager.update();
+
+      expect(localStorage.setItem).toHaveBeenCalled();
+      expect(this.matchFromLocalStorage(newGuestName)).toBeTruthy();
     });
 
     //
@@ -289,7 +306,9 @@ describe('Shuffling Pines App', function () {
     beforeEach( function () {
 
       this.isSameGuestData = function (d1, d2, includeDate) {
-        if (includeDate === undefined) includeDate = true;
+        if (includeDate === undefined) {
+          includeDate = true;
+        }
         if (!includeDate) {
           d2.transitionDate = new Date(d1.transitionDate.getTime());
         }
@@ -351,8 +370,13 @@ describe('Shuffling Pines App', function () {
     });
 
     it('should activate guest list tab.', function () {
-      $document = angular.element(document);
-      $document.find('body').append(
+      var $documentMock;
+      inject(['$document', function ($document) {
+        $documentMock = $document;
+      }]);
+      // Build a bacic structure for the tabs to test.
+      $documentMock.find('body').append(
+        '<div id="mockDOM">' +
         '<ul class="nav nav-tabs">' +
           '<li id="tab1" role="presentation" class="active">' +
             '<a href="#form" role="tab" data-toggle="tab"></a>' +
@@ -364,163 +388,212 @@ describe('Shuffling Pines App', function () {
         '<div class="tab-content">' +
           '<div class="tab-pane active" id="form"></div>' +
           '<div class="tab-pane" id="guests"></div>' +
-        '<div>');
+        '</div></div>');
 
-        var classTab1 = $('#tab1').attr('class');
-        var classTab2 = $('#tab2').attr('class');
-        expect(classTab1).toMatch('active');
-        expect(classTab2).not.toMatch('active');
+      var classTab1 = $('#tab1').attr('class');
+      var classTab2 = $('#tab2').attr('class');
+      expect(classTab1).toMatch('active');
+      expect(classTab2).not.toMatch('active');
 
-        var classForm = $('#form').attr('class');
-        var classGuests = $('#guests').attr('class');
-        expect(classForm).toMatch('active');
-        expect(classGuests).not.toMatch('active');
+      var classForm = $('#form').attr('class');
+      var classGuests = $('#guests').attr('class');
+      expect(classForm).toMatch('active');
+      expect(classGuests).not.toMatch('active');
 
-        var name = "Guest To Check Log";
-        formVm.input.name = name;
-        formVm.submitForm ();
+      var name = "Guest To Check Log";
+      formVm.input.name = name;
+      formVm.submitForm ();
 
-        classTab1 = $('#tab1').attr('class');
-        classTab2 = $('#tab2').attr('class');
-        expect(classTab1).not.toMatch('active');
-        expect(classTab2).toMatch('active');
+      classTab1 = $('#tab1').attr('class');
+      classTab2 = $('#tab2').attr('class');
+      expect(classTab1).not.toMatch('active');
+      expect(classTab2).toMatch('active');
 
-        classForm = $('#form').attr('class');
-        classGuests = $('#guests').attr('class');
-        expect(classForm).not.toMatch('active');
-        expect(classGuests).toMatch('active');
+      classForm = $('#form').attr('class');
+      classGuests = $('#guests').attr('class');
+      expect(classForm).not.toMatch('active');
+      expect(classGuests).toMatch('active');
+
+      // Cleanup the test DOM elements
+      $('#mockDOM').remove();
     });
   });
 
   describe('GuestsController test', function () {
+    var guestsVm, guestManager, $window;
+    var GuestData;
+    var confirmDeleteOKOrCancel; // OK
+
+    beforeEach( function () {
+      inject (['$controller', '$rootScope', '$injector', function ($controller, $rootScope, $injector) {
+        // Create FormController under $rootScope
+        var formScope = $rootScope.$new();
+        guestsVm = $controller('GuestsController as guestsVm', {$scope:formScope});
+
+        guestManager = $injector.get('guestManager');
+        GuestData = $injector.get('GuestData');
+        $window = $injector.get('$window');
+      }]);
+    });
+    beforeEach( function () {
+      confirmDeleteOKOrCancel = true; // OK
+      spyOn(guestManager, "update").and.callThrough();
+      spyOn(guestManager, "softDeleteGuest").and.callThrough();
+      spyOn(guestManager, "deleteGuest").and.callThrough();
+      spyOn($window, "confirm").and.callFake(function () {
+        return confirmDeleteOKOrCancel;
+      });
+    });
+
+    it('should return a couple of guest data at the beginning.', function () {
+      expect(guestsVm.getGuestList().length).toBeGreaterThan(1);
+    });
+
+    it('should return same list as guestManager service has.', function () {
+      expect(guestsVm.getGuestList()).toEqual(guestManager.guests);
+    });
+
+    it('should have an option for moving to <Arrived> state from <Pick-up> or <Drop-off>.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest1", actionOption: 'pickup'}));
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).not.toBeTruthy ();
+      var str = guestsVm.getCurrentStatusString(idx);
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Pick-up');
+
+      idx++;
+      guestManager.addGuest(new GuestData({name: "Guest2", actionOption: 'dropoff'}));
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).not.toBeTruthy ();
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Drop-off');
+    });
+
+    it('should have an option for moving to <Pickup> state on clicking <Arrived> buttton.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest1", actionOption: 'pickup'}));
+      guestsVm.onClickChangeActionState(idx);
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).not.toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).toBeTruthy ();
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Arrived');
+
+      idx++;
+      guestManager.addGuest(new GuestData({name: "Guest2", actionOption: 'dropoff'}));
+      guestsVm.onClickChangeActionState(idx);
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).not.toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).toBeTruthy ();
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Arrived');
+    });
+
+    it('should not have any option after chaning two times.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest1", actionOption: 'pickup'}));
+      guestsVm.onClickChangeActionState(idx);
+      guestsVm.onClickChangeActionState(idx);
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).not.toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).not.toBeTruthy ();
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Pick-up');
+
+      idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest2", actionOption: 'dropoff'}));
+      guestsVm.onClickChangeActionState(idx);
+      guestsVm.onClickChangeActionState(idx);
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Arrived')).not.toBeTruthy ();
+      expect(guestsVm.needToShowChangeStateButton(idx, 'Pickup')).not.toBeTruthy ();
+      expect(guestsVm.getCurrentStatusString(idx)).toMatch ('Pick-up');
+    });
+
+    it('should call softDeleteGuest function of guestManager after applying soft delete operation.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      guestManager.softDeleteGuest.calls.reset();
+      guestsVm.softDeleteGuest (idx);
+      expect(guestManager.softDeleteGuest).toHaveBeenCalled ();
+      expect(guestManager.softDeleteGuest.calls.argsFor(0)).toEqual ([idx]);
+    });
+
+    it('should call update function of guestManager after chaging soft delete flag.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      guestManager.update.calls.reset();
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      expect(guestManager.update).toHaveBeenCalled ();
+    });
+
+    it('should show comfirmation button after being soft-deleted.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      // Soft-delete
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      // NOTE: ng-show attaribute of the button is controlled by guestsVm.isSoftDeleted function.
+      expect(guestsVm.isSoftDeleted(idx)).toBeTruthy ();
+    });
+
+    it('should show the confirmation dialog on clicking the delete confirmation button.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      // Soft-delete
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      confirmDeleteOKOrCancel = true;
+      guestsVm.deleteGuest(idx);
+      expect($window.confirm).toHaveBeenCalled ();
+    });
+
+    it('should remove the guest data on OK in the confirmation dialog.', function () {
+      var originalLength = guestsVm.getGuestList().length;
+      var idx = originalLength;
+
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      // Soft-delete
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      // reset the spy on guestManager.deleteGuest
+      guestManager.deleteGuest.calls.reset ();
+
+      // OK to delete
+      confirmDeleteOKOrCancel = true;
+      guestsVm.deleteGuest(idx);
+
+      // guestManager.deleteGuest should get called with idx
+      expect(guestManager.deleteGuest).toHaveBeenCalled();
+      expect(guestManager.deleteGuest.calls.argsFor(0)).toEqual([idx]);
+      expect(guestsVm.getGuestList().length).toBe(originalLength);
+    });
+
+    it('should not remove the guest data on Cancel in the confirmation dialog.', function () {
+      var originalLength = guestsVm.getGuestList().length;
+      var idx = originalLength;
+
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      // reset the spy on guestManager.deleteGuest
+      guestManager.deleteGuest.calls.reset ();
+
+      // Soft-delete
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      // Cancel the deletion
+      confirmDeleteOKOrCancel = false;
+      guestsVm.deleteGuest(idx);
+
+      // guestManager.deleteGuest should not get called.
+      expect(guestManager.deleteGuest).not.toHaveBeenCalled();
+      expect(guestsVm.getGuestList().length).toBe(originalLength+1);
+    });
 
   });
-
-  // var guestManager;
-  // var formVm, guestsVm;
-  // var fakeLocalStorage;
-  //
-  // //
-  // // Instantiate controllers
-  // //
-  // beforeEach(module('ShufflingPinesApp'));
-  // beforeEach( function () {
-  //   inject (['$controller', '$rootScope', 'guestManager', function ($controller, $rootScope, $guestManager) {
-  //     // Create FormController under $rootScope
-  //     var formScope = $rootScope.$new();
-  //     formVm = $controller('FormController as formVm', {$scope:formScope});
-  //
-  //     // Create GuestsController under $rootScope
-  //     var guestsScope = $rootScope.$new();
-  //     guestsVm = $controller('GuestsController as guestsVm', {$scope:guestsScope});
-  //
-  //     guestManager = $guestManager;
-  //   }]);
-  // });
-  //
-  // //
-  // // Mock localStorage
-  // //
-  // beforeEach(function () {
-  //   fakeLocalStorage = new FakeLocalStorage();
-  //   spyOn(localStorage, "getItem").and.callFake(fakeLocalStorage.getItem);
-  //   spyOn(localStorage, "setItem").and.callFake(fakeLocalStorage.setItem);
-  //   guestsVm.deleteAllGuests();
-  //
-  //   spyOn(console, "log");
-  // });
-
-  //
-  // Tests for FormController
-  //
-  /*
-  xdescribe('Form controller', function() {
-    // Default input.
-    var defaultInput = {
-            name:           '',
-            transitionDate: new Date(),
-            actionOption:   'pickup',
-            pickupLocation: 'Gate1',
-            actionState0: false,
-            actionState1: false,
-            actionState2: false
-    };
-
-    it('should be initialized with default values.', function() {
-      expect(formVm.input.name).toBe(defaultInput.name);
-      expect(formVm.input.transitionDate.toDateString()).toBe(defaultInput.transitionDate.toDateString());
-      expect(formVm.input.actionOption).toBe(defaultInput.actionOption);
-      expect(formVm.input.pickupLocation).toBe(defaultInput.pickupLocation);
-    });
-
-    it('should show loaction input field only if pickup option is selected.', function() {
-      expect(formVm.needShowLocation()).toBeTruthy();
-      formVm.input.actionOption = 'dropoff';
-      expect(formVm.needShowLocation()).not.toBeTruthy();
-    });
-
-    it('should not submit without name input.', function() {
-      var numberOfGuests = guestManager.guests.length;
-      formVm.submitForm ();
-      var numberOfGuests2 = guestManager.guests.length;
-      expect(numberOfGuests2).toBe(numberOfGuests);
-    });
-
-    it('should not submit with invalid pickup location input.', function() {
-      var oldNumberOfGuests = guestManager.guests.length;
-      formVm.input.name = "Lee";
-      formVm.input.pickupLocation = "";
-      formVm.submitForm ();
-
-      var guestList = guestManager.guests;
-      expect(guestList.length).toBe(oldNumberOfGuests);
-    });
-
-    it('should submit with valid input.', function() {
-      var oldNumberOfGuests = guestManager.guests.length;
-
-      var name = "Kyeong Hwi Lee";
-      formVm.input.name = name;
-      formVm.submitForm ();
-
-      var guestList = guestManager.guests;
-      expect(guestList.length).toBe(oldNumberOfGuests + 1);
-      expect(guestList[oldNumberOfGuests].name).toBe(name);
-    });
-
-    it('should log guest list to the console on submitting.', function() {
-      var name = "Kyeong Hwi Lee";
-      formVm.input.name = name;
-      formVm.submitForm ();
-      var logInput = console.log.calls.argsFor(1);
-      expect(logInput).toMatch(name);
-    });
-
-    // if ('should move to Guests tab after submitting the form.', function () {
-    //   var tabNavElem  = $('<ul class="nav nav-tabs">' +
-    //                       '<li role="presentation" class="active"><a></a></li>' +
-    //                       '<li id="guestsTab" role="presentation"></li>' +
-    //                       '</ul>');
-    //   var tabContents = $('<div class="tab-content">' +
-    //                       '<div class="tab-pane active" id="form"></div>' +
-    //                       '<div class="tab-pane" id="guests"></div>' +
-    //                       '</div>');
-    // });
-
-  });
-
-  //
-  // Tests for GuestsController
-  //
-  xdescribe('Guests controller', function() {
-
-    it('should be initialized ', function() {
-      expect(true).toBeTruthy();
-      // expect(formCtrl.debugON).toBe(true);
-    });
-
-  });
-  */
 
   //
   // FakeLocalStorage class

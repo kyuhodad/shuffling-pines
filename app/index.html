@@ -80,7 +80,7 @@
         <!-- Tab pane 2 -->
         <!-- <div role="tabpanel" class="tab-pane" id="guests"> -->
         <div ng-controller="GuestsController as guestsVm" role="tabpanel" class="tab-pane" id="guests">
-          <button type="button" class="btn row" ng-click="guestsVm.deleteAllGuests()">Clear All</button>
+          <button ng-show="guestsVm._DEBUG" type="button" class="btn row" ng-click="guestsVm.deleteAllGuests()">Clear All</button>
 
           <table class="table table-striped">
             <thead>
@@ -93,35 +93,35 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat = "guest in guestsVm.getGuestList()">
-                <td ng-class="{deleted_guest: guest.isDeleted}">{{guest.name}}</td>
-                <td ng-class="{deleted_guest: guest.isDeleted}">{{guest.transitionDate.toDateString()}}</td>
-                <td ng-class="{deleted_guest: guest.isDeleted}">
+              <tr ng-repeat = "(index, guest) in guestsVm.getGuestList()">
+                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">{{guest.name}}</td>
+                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">{{guest.transitionDate.toDateString()}}</td>
+                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">
                   <form class="form-inline">
                     <span class="label label-primary">
-                      {{guest.getCurrentStatusString()}}
+                      {{guestsVm.getCurrentStatusString(index)}}
                     </span>&nbsp;
-                    <label ng-show="guest.actionState === 0">
-                      <button type="button" class="btn btn-circle btn-sm" ng-click="guest.actionState=1"
-                              ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">
+                    <label ng-show="guestsVm.needToShowChangeStateButton(index, 'Arrived')">
+                      <button type="button" class="btn btn-circle btn-sm" ng-click="guestsVm.onClickChangeActionState(index)"
+                              ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">
                         <span class="glyphicon glyphicon-circle-arrow-right"></span>
                         {{guest.getStatusString(1)}}
                       </button>
                     </label>
-                    <label ng-show="guest.actionState === 1">
-                      <button type="button" class="btn btn-circle btn-sm" ng-click="guest.actionState=2"
-                              ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">
+                    <label ng-show="guestsVm.needToShowChangeStateButton(index, 'Pickup')">
+                      <button type="button" class="btn btn-circle btn-sm" ng-click="guestsVm.onClickChangeActionState(index)"
+                              ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">
                         <span class="glyphicon glyphicon-circle-arrow-right"></span>
                         {{guest.getStatusString(2)}}
                       </button>
                     </label>
                   </form>
                 </td>
-                <td ng-class="{deleted_guest: guest.isDeleted}" ng-disabled="guest.isDeleted">{{guest.getPickupLocation()}}</td>
+                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">{{guest.getPickupLocation()}}</td>
                 <td>
                   <form class="form-inline">
-                    <input ng-model="guest.isDeleted" type="checkbox" ng-change="guestsVm.update()">
-                    <button type="button" class="btn btn-danger btn-circle btn-sm" ng-click="guestsVm.deleteGuest($index)" ng-show="guest.isDeleted">
+                    <input ng-model="guest.isDeleted" type="checkbox" ng-change="guestsVm.onChangeSoftDeleteGuest(index)">
+                    <button type="button" class="btn btn-danger btn-circle btn-sm" ng-click="guestsVm.deleteGuest(index)" ng-show="guestsVm.isSoftDeleted(index)">
                       <span class="glyphicon glyphicon-remove"></span>
                     </button>
                   </form>

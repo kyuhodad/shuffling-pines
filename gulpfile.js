@@ -18,8 +18,7 @@ var appCss = appRoot + '/css';
 gulp.task('buildApp', function() {
   return gulp.src(appJs + '/**/*.js')
     .pipe(concat("app.js"))
-//    .pipe(ngmin())
-//    .pipe(uglify())
+    .pipe(uglify())
     .pipe(gulp.dest(distRoot))
     .pipe(connect.reload());
 });
@@ -30,7 +29,7 @@ gulp.task("buildLib", function() {
     libRoot + "/angular/angular.min.js",
     libRoot + "/bootstrap/dist/js/*.min.js"])
     .pipe(concat("lib.js"))
-    // .pipe(uglify())
+    .pipe(uglify())
     .pipe(gulp.dest(distRoot))
 });
 
