@@ -205,26 +205,33 @@ app.controller('GuestsController', ['guestManager', 'GuestData', function(guestM
   };
 
   vm.edit = {};
-  vm.edit.data = new GuestData();
+  vm.edit.data = {};
   vm.edit.index = -1;
-  vm.edit.key = "";
-  vm.onBeginEdit = function (index, keyToEdit) {
+
+  vm.getGuestRowTemplate = function (index) {
+    return (vm.edit.index === index) ? "edit_guest_row_tpl" : "display_guest_row_tpl"
+  }
+
+  vm.onBeginEdit = function (index) {
     vm.edit.index = index;
-    vm.edit.key = keyToEdit;
-    vm.edit.data[vm.edit.key] = guestManager.guests[vm.edit.index][vm.edit.key];
+    vm.edit.data = new GuestData(guestManager.guests[vm.edit.index]);
   };
-  vm.isInEditMode = function (index, keyToEdit) {
+  vm.isInEditMode = function (index) {
     if (vm.edit.index === -1) {
       return false;
     }
-    return ( (vm.edit.index === index) && (vm.edit.key === keyToEdit) );
+    return vm.edit.index === index;
   };
-  vm.onEndEdit = function () {
+  vm.onOKEdit = function () {
     if (vm.edit.index >= 0) {
-      guestManager.guests[vm.edit.index][vm.edit.key] = vm.edit.data[vm.edit.key];
+      guestManager.guests[vm.edit.index] = vm.edit.data;
+      guestManager.update();
     }
     vm.edit.index = -1;
-    vm.edit.key = "";
+    vm.edit.data = {};
   };
-
+  vm.onCancelEdit = function () {
+    vm.edit.index = -1;
+    vm.edit.data = {};
+  };
 }]);

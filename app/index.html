@@ -93,8 +93,9 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat = "(index, guest) in guestsVm.getGuestList()">
-                <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-click="guestsVm.onBeginEdit(index, 'name')">
+              <tr ng-repeat = "(index, guest) in guestsVm.getGuestList()"
+                  ng-include="guestsVm.getGuestRowTemplate(index)">
+                <!-- <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-click="guestsVm.onBeginEdit(index, 'name')">
                   <span ng-hide="guestsVm.isInEditMode(index, 'name')">{{guest.name}}</span>
                   <form class="form-inline" ng-submit="guestsVm.onEndEdit()">
                     <input ng-model="guestsVm.edit.data.name" type="text" ng-show="guestsVm.isInEditMode(index, 'name')" ng-blur="guestsVm.onEndEdit()" >
@@ -130,7 +131,7 @@
                       <span class="glyphicon glyphicon-remove"></span>
                     </button>
                   </form>
-                </td>
+                </td> -->
               </tr>
             </tbody>
           </table>
@@ -140,4 +141,73 @@
   </div>
 
 </body>
+
+<script type="text/ng-template" id="display_guest_row_tpl">
+  <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-click="guestsVm.onBeginEdit(index, 'name')">
+    <span ng-hide="guestsVm.isInEditMode(index, 'name')">{{guest.name}}</span>
+  </td>
+  <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">{{guest.transitionDate.toDateString()}}</td>
+  <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}">
+    <form class="form-inline">
+      <span class="label label-primary">
+        {{guestsVm.getCurrentStatusString(index)}}
+      </span>&nbsp;
+      <label ng-show="guestsVm.needToShowChangeStateButton(index, 'Arrived')">
+        <button type="button" class="btn btn-circle btn-sm" ng-click="guestsVm.onClickChangeActionState(index)"
+                ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">
+          <span class="glyphicon glyphicon-circle-arrow-right"></span>
+          {{guest.getStatusString(1)}}
+        </button>
+      </label>
+      <label ng-show="guestsVm.needToShowChangeStateButton(index, 'Pickup')">
+        <button type="button" class="btn btn-circle btn-sm" ng-click="guestsVm.onClickChangeActionState(index)"
+                ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">
+          <span class="glyphicon glyphicon-circle-arrow-right"></span>
+          {{guest.getStatusString(2)}}
+        </button>
+      </label>
+    </form>
+  </td>
+  <td ng-class="{deleted_guest: guestsVm.isSoftDeleted(index)}" ng-disabled="guestsVm.isSoftDeleted(index)">{{guest.getPickupLocation()}}</td>
+
+  <td>
+    <form class="form-inline">
+      <button type="button" class="btn btn-default btn-circle btn-sm" ng-click="guestsVm.onBeginEdit(index)" ng-hide="guestsVm.isSoftDeleted(index)">
+        <span class="glyphicon glyphicon-pencil"></span>
+      </button>
+      <button type="button" class="btn btn-default btn-circle btn-sm" ng-click="guestsVm.softDeleteGuest(index)" ng-hide="guestsVm.isSoftDeleted(index)">
+        <span class="glyphicon glyphicon-trash"></span>
+      </button>
+
+      <button type="button" class="btn btn-danger btn-circle btn-sm" ng-click="guestsVm.deleteGuest(index)" ng-show="guestsVm.isSoftDeleted(index)">
+        <span class="glyphicon glyphicon-ok"></span>
+      </button>
+      <button type="button" class="btn btn-default btn-circle btn-sm" ng-click="guest.isDeleted=false; guestsVm.onChangeSoftDeleteGuest(index)" ng-show="guestsVm.isSoftDeleted(index)">
+        <span class="glyphicon glyphicon-remove"></span>
+      </button>
+    </form>
+  </td>
+
+</script>
+<script type="text/ng-template" id="edit_guest_row_tpl">
+  <td> <input ng-model="guestsVm.edit.data.name" type="text"> </td>
+  <td> <input ng-model="guestsVm.edit.data.transitionDate" type="date"> </td>
+  <td>
+      <span class="label label-primary">
+        {{guestsVm.getCurrentStatusString(index)}}
+      </span>
+  </td>
+  <td><input ng-model="guestsVm.edit.data.pickupLocation" type="text"></td>
+  <td>
+    <form class="form-inline">
+      <button type="button" class="btn btn-success btn-circle btn-sm" ng-click="guestsVm.onOKEdit()">
+        <span class="glyphicon glyphicon-ok"></span>
+      </button>
+      <button type="button" class="btn btn-danger btn-circle btn-sm" ng-click="guestsVm.onCancelEdit()">
+        <span class="glyphicon glyphicon-remove"></span>
+      </button>
+    </form>
+  </td>
+</script>
+
 </html>
