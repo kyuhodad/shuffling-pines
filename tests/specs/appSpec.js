@@ -523,7 +523,7 @@ describe('Shuffling Pines App', function () {
       expect(guestManager.update).toHaveBeenCalled ();
     });
 
-    it('should show comfirmation button after being soft-deleted.', function () {
+    it('should show OK / Cancel button after being soft-deleted.', function () {
       var idx = guestsVm.getGuestList().length;
       guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
 
@@ -531,11 +531,11 @@ describe('Shuffling Pines App', function () {
       guestsVm.getGuestList()[idx].isDeleted = true;
       guestsVm.onChangeSoftDeleteGuest(idx);
 
-      // NOTE: ng-show attaribute of the button is controlled by guestsVm.isSoftDeleted function.
+      // NOTE: ng-show attaributes of the buttons are controlled by guestsVm.isSoftDeleted function.
       expect(guestsVm.isSoftDeleted(idx)).toBeTruthy ();
     });
 
-    it('should show the confirmation dialog on clicking the delete confirmation button.', function () {
+    it('should show the confirmation dialog on clicking the delete confirmation(OK) button.', function () {
       var idx = guestsVm.getGuestList().length;
       guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
 
@@ -591,6 +591,81 @@ describe('Shuffling Pines App', function () {
       // guestManager.deleteGuest should not get called.
       expect(guestManager.deleteGuest).not.toHaveBeenCalled();
       expect(guestsVm.getGuestList().length).toBe(originalLength+1);
+    });
+
+    it('should show edit and soft-delete button on clicking the delete cancel button.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Delete"}));
+
+      // Soft-delete
+      guestsVm.getGuestList()[idx].isDeleted = true;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      // Cancel
+      guestsVm.getGuestList()[idx].isDeleted = false;
+      guestsVm.onChangeSoftDeleteGuest(idx);
+
+      // NOTE: Edit/Soft-Delete buttons are available when guestsVm.isSoftDeleted(index) is false.
+      expect(guestsVm.isSoftDeleted(idx)).not.toBeTruthy ();
+    });
+
+    it('should show the template for editing on clicking edit button.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Edit"}));
+
+      // The template id should be "display_guest_row_tpl" in regular mode.
+      expect(guestsVm.getGuestRowTemplate(idx)).toMatch("display_guest_row_tpl");
+
+      // Begin edit
+      guestsVm.onBeginEdit(idx);
+
+      // The template id should be "edit_guest_row_tpl"
+      expect(guestsVm.getGuestRowTemplate(idx)).toMatch("edit_guest_row_tpl");
+    });
+
+    it('should apply the changed guest data on clicking OK button in edit mode.', function () {
+      var idx = guestsVm.getGuestList().length;
+      guestManager.addGuest(new GuestData({name: "Guest To Edit"}));
+
+      // Begin edit
+      guestsVm.onBeginEdit(idx);
+
+      // Change data
+      var newName = "Changed Guest Name";
+      var newDate = Date('December 17, 2020');
+      guestsVm.edit.data.name = newName;
+      guestsVm.edit.data.transitionDate = newDate;
+      guestsVm.edit.data.actionOption = "dropoff";
+
+      // OK the changes
+      guestsVm.onOKEdit();
+
+      var guest = guestsVm.getGuestList()[idx];
+      expect(guest.name).toBe(newName);
+      expect(guest.transitionDate.valueOf()).toBe(newDate.valueOf());
+      expect(guest.actionOption).toMatch("dropoff");
+    });
+
+    it('should not apply any of the changes on clicking Cancel button in edit mode.', function () {
+      var idx = guestsVm.getGuestList().length;
+      var guestAdded = new GuestData({name: "Guest To Edit"});
+      guestManager.addGuest(guestAdded);
+
+      // Begin edit
+      guestsVm.onBeginEdit(idx);
+
+      // Change data
+      var newName = "Changed Guest Name";
+      var newDate = Date('December 17, 2020');
+      guestsVm.edit.data.name = newName;
+      guestsVm.edit.data.transitionDate = newDate;
+      guestsVm.edit.data.actionOption = "dropoff";
+
+      // Cacel the changes
+      guestsVm.onCancelEdit();
+
+      var guest = guestsVm.getGuestList()[idx];
+      expect(guestAdded).toEqual(guest);
     });
 
   });

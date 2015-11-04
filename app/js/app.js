@@ -204,23 +204,21 @@ app.controller('GuestsController', ['guestManager', 'GuestData', function(guestM
     guestManager.deleteAllGuests();
   };
 
+  //
+  // Handling inline edit
+  //
   vm.edit = {};
   vm.edit.data = {};
   vm.edit.index = -1;
-
   vm.getGuestRowTemplate = function (index) {
-    return (vm.edit.index === index) ? "edit_guest_row_tpl" : "display_guest_row_tpl"
-  }
-
+    return this.isInEditMode(index) ? "edit_guest_row_tpl" : "display_guest_row_tpl";
+  };
   vm.onBeginEdit = function (index) {
     vm.edit.index = index;
     vm.edit.data = new GuestData(guestManager.guests[vm.edit.index]);
   };
   vm.isInEditMode = function (index) {
-    if (vm.edit.index === -1) {
-      return false;
-    }
-    return vm.edit.index === index;
+    return (index !== -1) && (vm.edit.index === index);
   };
   vm.onOKEdit = function () {
     if (vm.edit.index >= 0) {
@@ -233,5 +231,8 @@ app.controller('GuestsController', ['guestManager', 'GuestData', function(guestM
   vm.onCancelEdit = function () {
     vm.edit.index = -1;
     vm.edit.data = {};
+  };
+  vm.edit.onChangeActionOption = function () {
+    vm.edit.data.actionState = 0;
   };
 }]);

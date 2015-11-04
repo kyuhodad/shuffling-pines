@@ -62,4 +62,6 @@ var colneGuest1 = new GuestData (guest1);
 
 - `FormController`: Controller for the guest form tab. It submits the form data with validation checking. Once the submitting is successful, it moves active tab to the guest list tab by using `tab` method provided bootstrap.
 
-- `GuestsController`: Controller for the guest list tab. It provides many wrapper functions to use `guestManager`. Also, soft-delete functionality has been implemented with tests. Once the checkbox in the **Delete** column is checked, the data row is shown dark grey color, and a confirmation button is shown so that user can delete the data.
+- `GuestsController`: Controller for the guest list tab. It provides many wrapper functions to use `guestManager`. To display the guest list, `<table>` element is used. The last column of the table (Edit/Delete) shows two buttons, edit and soft-delete.
+  - **Edit button**: On clicking it, all the data in the row can be editable. The changes can be confirmed or discarded by provided OK/Cancel buttons.
+  - **Soft-Delete button**: On clicking it, the row is shown with grey color, and OK/Cancel button is available. If OK button is clicked, a confirmation dialog is shown to confirm or cancel the deletion. If Cancel button is clicked, the soft-delete is canceled and the row is displayed with normal color.
