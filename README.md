@@ -1,7 +1,7 @@
 # Shuffling Pines Project
 #### By Kyeong Hwi Lee (https://github.com/kyuhodad/shuffling-pines)
 
-This project provides a application page which consists of two tabs:
+This project provides an application page which consists of two tabs:
 
   - **Input form for a guest**: Getting guest information for the Shuffling Pines Dissolution Center. The input data are :
     - `Guest Name`: Name of the guest. Must be set.
